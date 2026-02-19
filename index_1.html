@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JN AI Automations </title>
+<link rel="icon" type="image/png" href="JNAI Logo.jpeg">
+<meta name="description" content="Automated WhatsApp-based Google review collection for businesses. 50+ reviews in 30 days, zero staff effort. Serving Hyderabad & AP/Telangana.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@700&family=Outfit:wght@300;400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+<style>
+/* === VARIABLES & RESET === */
+:root {
+  /* Layout & Theme Colors */
+  --midnight: #030712; /* Hero Background */
+  --light-bg: #F8FAFC; /* Body Background */
+  --white: #FFFFFF;
+  
+  /* Text Colors */
+  --text-main: #334155;
+  --text-muted: #64748B;
+  --text-hero: #F8FAFC;
+  --text-hero-muted: #94A3B8;
+
+  /* Accents */
+  --accent: #3498DB; /* Blue for Trust */
+  --accent-dark: #2980B9;
+  --accent-glow: rgba(52, 152, 219, 0.4);
+  --green: #27AE60; /* Success Green */
+  --green-glow: rgba(39, 174, 96, 0.4);
+  --gold: #F1C40F;
+  
+  /* Midnight Cobalt (Hero/Nav Only) */
+  --indigo-blob: #4F46E5;
+  --teal-blob: #2DD4BF;
+  --slate-blob: #1E293B;
+
+  /* Fonts */
+  --font-logo: 'Syncopate', sans-serif;
+  --font-head: 'Outfit', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-body);
+  color: var(--text-main);
+  background: var(--light-bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* === UTILITY === */
+.container { max-width: 1140px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 2; }
+.section { padding: 100px 0; position: relative; background: var(--light-bg); }
+.section-alt { background: #FFFFFF; }
+.section-dark { background: var(--midnight); color: var(--white); }
+.text-center { text-align: center; }
+
+/* Typography */
+h1, h2, h3, h4 { font-family: var(--font-head); line-height: 1.15; letter-spacing: -0.02em; }
+h2.section-title { font-size: clamp(2rem, 4vw, 2.75rem); font-weight: 700; color: #0f172a; margin-bottom: 20px; }
+.section-dark h2.section-title { color: var(--white); }
+.section-sub { font-size: 1.125rem; color: var(--text-muted); max-width: 650px; margin: 0 auto 60px; font-weight: 400; }
+
+/* Badges */
+.badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--font-head); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; padding: 8px 16px; border-radius: 100px; margin-bottom: 24px; }
+.badge-accent { background: rgba(52, 152, 219, 0.1); color: var(--accent-dark); border: 1px solid rgba(52, 152, 219, 0.2); }
+.badge-green { background: rgba(39, 174, 96, 0.1); color: var(--green); border: 1px solid rgba(39, 174, 96, 0.2); }
+
+/* === VIEW SWITCHER (SPA Logic) === */
+.page-view { display: none; animation: fadeIn 0.4s ease-out; }
+.page-view.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+/* === NAV (Midnight Cobalt) === */
+.nav { position: fixed; top: 0; left: 0; right: 0; z-index: 1000; padding: 20px 0; transition: all 0.3s ease; background: var(--midnight); border-bottom: 1px solid rgba(255,255,255,0.05); }
+.nav.scrolled { padding: 12px 0; background: rgba(3, 7, 18, 0.95); backdrop-filter: blur(16px); box-shadow: 0 4px 30px rgba(0,0,0,0.3); }
+.nav-inner { display: flex; align-items: center; justify-content: space-between; max-width: 1140px; margin: 0 auto; padding: 0 24px; }
+.logo-text { font-family: var(--font-logo); font-weight: 700; color: var(--white); font-size: 1.2rem; cursor: pointer; text-decoration: none; letter-spacing: -0.02em; }
+.nav-links { display: flex; gap: 32px; align-items: center; }
+.nav-links a { color: var(--text-hero-muted); text-decoration: none; font-size: 0.95rem; font-weight: 500; transition: color 0.2s; cursor: pointer; font-family: var(--font-head); }
+.nav-links a:hover { color: var(--white); }
+.nav-cta { background: var(--green); color: white !important; padding: 10px 24px; border-radius: 50px; font-weight: 600 !important; font-size: 0.9rem !important; transition: all 0.3s ease; }
+.nav-cta:hover { transform: translateY(-2px); box-shadow: 0 0 20px rgba(39,174,96,0.4); }
+.nav-mobile-btn { display: none; background: none; border: none; cursor: pointer; color: var(--white); font-size: 1.5rem; }
+
+/* === HERO (Midnight Cobalt + Blobs) === */
+.hero { 
+  padding: 180px 0 100px; 
+  background: var(--midnight); 
+  position: relative; 
+  overflow: hidden; 
+  color: var(--white);
+}
+
+/* Local Blobs for Hero Only */
+.hero-blobs { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; overflow: hidden; pointer-events: none; }
+.blob { position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.15; animation: move 20s infinite alternate; }
+.blob-1 { width: 400px; height: 400px; background: var(--indigo-blob); top: -10%; left: -10%; }
+.blob-2 { width: 500px; height: 500px; background: var(--slate-blob); bottom: -10%; right: -10%; animation-duration: 25s; }
+.blob-3 { width: 350px; height: 350px; background: var(--teal-blob); top: 30%; left: 40%; animation-duration: 30s; }
+@keyframes move { from { transform: translate(0, 0) scale(1); } to { transform: translate(100px, 50px) scale(1.1); } }
+
+.vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; background: radial-gradient(circle, transparent 20%, rgba(0,0,0,0.7) 100%); }
+
+.hero-content { position: relative; z-index: 2; max-width: 800px; margin: 0 auto; text-align: left; }
+.hero-badge { display: inline-flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #6edff6; font-family: var(--font-head); font-size: 0.85rem; font-weight: 500; padding: 8px 20px; border-radius: 50px; margin-bottom: 32px; }
+.hero-badge .pulse { width: 8px; height: 8px; background: #2ecc71; border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); } 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0); } }
+.hero h1 { font-size: clamp(2.5rem, 6vw, 4.2rem); font-weight: 700; color: var(--white); line-height: 1.1; margin-bottom: 24px; letter-spacing: -0.03em; }
+.hero h1 .highlight { color: var(--teal-blob); }
+.hero p { font-size: 1.25rem; color: var(--text-hero-muted); line-height: 1.6; margin-bottom: 40px; max-width: 600px; }
+.hero-stats { display: grid; grid-template-columns: repeat(3, auto); gap: 40px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.08); justify-content: start; }
+.hero-stat-num { font-family: var(--font-head); font-size: 2.5rem; font-weight: 700; color: var(--white); line-height: 1; margin-bottom: 8px; }
+.hero-stat-num .accent { color: var(--accent); }
+.hero-stat-label { font-size: 0.9rem; color: var(--text-hero-muted); line-height: 1.3; }
+
+/* === BUTTONS === */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-family: var(--font-head); font-weight: 600; font-size: 1.05rem; padding: 16px 36px; border-radius: 12px; text-decoration: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; border: none; }
+.btn-wa { background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; box-shadow: 0 10px 20px -5px rgba(37, 211, 102, 0.4); }
+.btn-wa:hover { transform: translateY(-3px); box-shadow: 0 15px 30px -5px rgba(37, 211, 102, 0.5); }
+.btn-secondary { background: rgba(255,255,255,0.05); color: var(--white); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px); }
+.btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-3px); }
+
+/* === CARDS === */
+.problem-grid, .features-grid, .why-grid { display: grid; gap: 30px; }
+.problem-grid, .why-grid { grid-template-columns: repeat(3, 1fr); }
+.features-grid { grid-template-columns: repeat(2, 1fr); }
+.card { background: var(--white); border: 1px solid #E2E8F0; border-radius: 20px; padding: 40px 30px; text-align: center; transition: all 0.3s ease; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+.card:hover { transform: translateY(-8px); box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); border-color: #CBD5E1; }
+.problem-num { font-family: var(--font-head); font-size: 3.5rem; font-weight: 800; line-height: 1; margin-bottom: 16px; color: #0f172a; }
+.card h3 { font-size: 1.1rem; color: #1E293B; font-weight: 600; margin-bottom: 8px; }
+.card p { font-size: 0.95rem; color: #64748B; }
+.feature-card { display: flex; align-items: flex-start; gap: 20px; padding: 30px; text-align: left; }
+.feature-check { width: 32px; height: 32px; min-width: 32px; background: #DCFCE7; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #166534; font-weight: 800; font-size: 0.9rem; }
+.why-card { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 40px 30px; text-align: center; color: white; }
+.why-icon { font-size: 2.5rem; margin-bottom: 20px; }
+
+/* === TIMELINE === */
+.steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; position: relative; margin-top: 60px; }
+.steps::before { content: ''; position: absolute; top: 50px; left: 15%; right: 15%; height: 2px; background: #3498DB; opacity: 0.15; z-index: 0; }
+.step { text-align: center; position: relative; z-index: 2; padding: 0 15px; }
+.step-icon { width: 100px; height: 100px; margin: 0 auto 24px; border-radius: 50%; background: var(--white); border: 1px solid #E2E8F0; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); transition: transform 0.3s; }
+.step:hover .step-icon { transform: scale(1.05); border-color: var(--accent); }
+
+/* === PRICING === */
+.pricing-box { max-width: 500px; margin: 0 auto; background: var(--white); border-radius: 24px; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1); border: 1px solid #E2E8F0; position: relative; }
+.pricing-box::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px; background: linear-gradient(90deg, #25D366, #3498DB); }
+.pricing-header { padding: 40px 40px 20px; text-align: center; }
+.pricing-header h3 { font-size: 1.8rem; font-weight: 800; color: #0f172a; }
+.pricing-body { padding: 20px 40px 40px; }
+.pricing-row { display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #F1F5F9; }
+.pricing-amount { font-family: var(--font-head); font-weight: 700; font-size: 1.25rem; color: #0f172a; }
+.pricing-amount.green { color: var(--green); }
+.pricing-note { font-size: 0.85rem; color: #94A3B8; text-align: center; margin: 24px 0; padding: 16px; background: #F8FAFC; border-radius: 8px; line-height: 1.5; }
+
+/* === FAQ === */
+.faq-list { max-width: 750px; margin: 0 auto; text-align: left; }
+.faq-item { background: var(--white); border: 1px solid #E2E8F0; border-radius: 12px; margin-bottom: 16px; overflow: hidden; transition: all 0.3s ease; }
+.faq-item.open { border-color: var(--accent); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.faq-q { padding: 20px 24px; font-family: var(--font-head); font-weight: 600; font-size: 1.05rem; color: #0f172a; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+.faq-a { max-height: 0; overflow: hidden; padding: 0 24px; transition: all 0.3s ease; font-size: 0.95rem; color: #475569; }
+.faq-item.open .faq-a { max-height: 500px; padding-bottom: 24px; }
+
+/* === LEGAL PAGE === */
+.legal-page { padding: 140px 0 80px; min-height: 80vh; }
+.legal-content { background: var(--white); padding: 60px; border-radius: 20px; border: 1px solid #E2E8F0; max-width: 900px; margin: 0 auto; text-align: left; }
+.legal-content h3 { font-size: 1.25rem; font-weight: 700; color: #0f172a; margin: 40px 0 16px; border-left: 4px solid var(--accent); padding-left: 16px; }
+.legal-content p, .legal-content li { margin-bottom: 12px; }
+
+/* === TABLE STYLES === */
+.legal-table { width: 100%; border-collapse: separate; border-spacing: 0; margin: 30px 0; border: 1px solid #E2E8F0; border-radius: 12px; overflow: hidden; }
+.legal-table th { background: #F1F5F9; color: #0f172a; padding: 16px; text-align: left; font-weight: 600; font-size: 0.9rem; }
+.legal-table td { padding: 16px; border-top: 1px solid #E2E8F0; color: #475569; }
+
+/* === FOOTER === */
+.footer { background: #060911; padding: 80px 0 40px; border-top: 1px solid rgba(255,255,255,0.05); margin-top: auto; }
+.footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr 1.5fr; gap: 40px; margin-bottom: 60px; }
+.footer-col h4 { color: var(--white); font-size: 1.1rem; margin-bottom: 24px; }
+.footer-links-col a { color: #94A3B8; text-decoration: none; font-size: 0.95rem; margin-bottom: 12px; cursor: pointer; transition: color 0.2s; }
+.footer-links-col a:hover { color: white; }
+.footer-contact-item { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; color: #94A3B8; font-size: 0.9rem; }
+.footer-contact-item svg { width: 18px; height: 18px; fill: var(--accent); }
+.footer-bottom { border-top: 1px solid rgba(255,255,255,0.05); padding-top: 30px; text-align: center; color: #475569; font-size: 0.85rem; }
+
+/* === FLOATING WA === */
+.wa-float { position: fixed; bottom: 30px; right: 30px; z-index: 999; width: 64px; height: 64px; background: #25D366; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 25px rgba(37, 211, 102, 0.4); transition: all 0.3s; }
+.wa-float svg { width: 34px; height: 34px; fill: white; }
+
+/* === RESPONSIVE === */
+@media (max-width: 900px) {
+  .hero { text-align: center; }
+  .hero-ctas, .hero-stats { justify-content: center; text-align: center; }
+  .problem-grid, .why-grid, .steps, .features-grid { grid-template-columns: 1fr; }
+  .steps::before { display: none; }
+  .nav-links { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--midnight); padding: 30px; flex-direction: column; border-top: 1px solid rgba(255,255,255,0.1); }
+  .nav-links.open { display: flex; }
+  .nav-mobile-btn { display: block; }
+  .footer-grid { grid-template-columns: 1fr; text-align: center; }
+  .footer-contact-item { justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a onclick="showPage('home')" class="logo-text">
+        JN AI
+    </a>
+    <div class="nav-links" id="navLinks">
+      <a onclick="showPage('home', 'how')">How It Works</a>
+      <a onclick="showPage('home', 'features')">Features</a>
+      <a onclick="showPage('home', 'pricing')">Pricing</a>
+      <a onclick="showPage('home', 'faq')">FAQ</a>
+      <a href="https://wa.me/918919198110?text=Hi%20Joshi%2C%20I%27m%20interested%20in%20the%20Google%20review%20automation%20system." class="nav-cta">Get Started</a>
+    </div>
+    <button class="nav-mobile-btn" onclick="document.getElementById('navLinks').classList.toggle('open')" aria-label="Menu">☰</button>
+  </div>
+</nav>
+
+<!-- ============================ -->
+<!-- VIEW: HOME (Landing Page) -->
+<!-- ============================ -->
+<div id="view-home" class="page-view active">
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="hero-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+      <div class="blob blob-3"></div>
+    </div>
+    <div class="vignette"></div>
+    <div class="container">
+      <div class="hero-content fade-up">
+        <div class="hero-badge"><span class="pulse"></span> Serving Retail, Healthcare & Service Businesses</div>
+        <h1>Turn Every <span class="highlight">Customer Visit</span><br>Into a 5-Star Review</h1>
+        <p>A fully automated WhatsApp system that collects 5-star Google reviews from your customers after every transaction, while privately filtering negative feedback. Zero extra work for your team.</p>
+        <div class="hero-ctas">
+          <a href="https://wa.me/918919198110?text=Hi%20Joshi%2C%20I%27m%20interested%20in%20the%20Google%20review%20automation%20system." class="btn btn-wa">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp Us
+          </a>
+          <a href="tel:+918919198110" class="btn btn-secondary">📞 +91 891 919 8110</a>
+        </div>
+        <div class="hero-stats">
+          <div>
+            <div class="hero-stat-num">77<span class="accent">%</span></div>
+            <div class="hero-stat-label">customers check reviews<br>before visiting</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">2.7<span class="accent">x</span></div>
+            <div class="hero-stat-label">more footfall for businesses<br>with 50+ reviews</div>
+          </div>
+          <div>
+            <div class="hero-stat-num">98<span class="accent">%</span></div>
+            <div class="hero-stat-label">WhatsApp open rate<br>vs 20% email</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="section section-alt" id="problem">
+    <div class="container text-center">
+      <span class="badge badge-accent">THE PROBLEM</span>
+      <h2 class="section-title">Your Business Does Great Work.<br>But Are New Customers Finding You?</h2>
+      <p class="section-sub">New customers check Google reviews before visiting. Without enough reviews, you lose them to competitors — even if your service is better.</p>
+      <div class="problem-grid">
+        <div class="card">
+          <div class="problem-num">77%</div>
+          <h3>of customers check Google reviews<br>before choosing a business</h3>
+        </div>
+        <div class="card">
+          <div class="problem-num">2.7x</div>
+          <h3>more visits when you<br>have 50+ Google reviews</h3>
+        </div>
+        <div class="card">
+          <div class="problem-num">70%</div>
+          <h3>more clicks from Google Maps<br>with strong review profiles</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="section" id="how">
+    <div class="container text-center">
+      <span class="badge badge-green">HOW IT WORKS</span>
+      <h2 class="section-title">4 Simple Steps. Fully Automated.</h2>
+      <p class="section-sub">Once set up, the system runs on autopilot. Your team doesn't need to do anything extra.</p>
+      <div class="steps">
+        <div class="step">
+          <div class="step-icon">👤</div>
+          <h3>Customer Visit</h3>
+          <p>Customer details are entered after a transaction or visit</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">💬</div>
+          <h3>Auto WhatsApp</h3>
+          <p>"How was your experience?" — sent automatically via WhatsApp</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">⭐</div>
+          <h3>Happy → Google</h3>
+          <p>Happy customers get a direct link to leave a Google review</p>
+        </div>
+        <div class="step">
+          <div class="step-icon">🛡️</div>
+          <h3>Unhappy → Private</h3>
+          <p>Unhappy customers go to a private feedback form — ensuring we address their concerns first</p>
+        </div>
+      </div>
+      <div style="margin-top: 40px; font-size: 0.85rem; color: #94A3B8; max-width: 800px; margin-left: auto; margin-right: auto; line-height: 1.6;">
+          *We personalize the experience for unhappy customers by highlighting a private resolution channel, while ensuring the option to leave a public review (e.g., on Google) <strong>remains clearly accessible</strong>. This approach encourages private resolution for better customer service without blocking or hiding public review options, ensuring full compliance with Google’s anti‑gating policy.
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="section section-alt" id="features">
+    <div class="container text-center">
+      <span class="badge badge-accent">WHAT'S INCLUDED</span>
+      <h2 class="section-title">Everything You Need. Nothing You Don't.</h2>
+      <p class="section-sub">Complete setup, monitoring, and optimization — all handled for you.</p>
+      <div class="features-grid">
+        <div class="card feature-card">
+          <div class="feature-check">✓</div>
+          <div><h4>Complete WhatsApp Automation</h4><p>Professional messaging system set up on your business WhatsApp number</p></div>
+        </div>
+        <div class="card feature-card">
+          <div class="feature-check">✓</div>
+          <div><h4>Custom Message Templates</h4><p>Messages in English + Telugu/Hindi — matching your customer base</p></div>
+        </div>
+        <div class="card feature-card">
+          <div class="feature-check">✓</div>
+          <div><h4>Google Business Connection</h4><p>Direct integration with your Google Business Profile for seamless reviews</p></div>
+        </div>
+        <div class="card feature-card">
+          <div class="feature-check">✓</div>
+          <div><h4>Negative Review Protection</h4><p>Private feedback form catches unhappy customers before they go public</p></div>
+        </div>
+        <div class="card feature-card">
+          <div class="feature-check">✓</div>
+          <div><h4>Team Training Session</h4><p>30–45 minute training so your team knows exactly what to do</p></div>
+        </div>
+        <div class="card feature-card">
+          <div class="feature-check">✓</div>
+          <div><h4>30 Days Monitoring</h4><p>We watch the system and optimize performance throughout the pilot</p></div>
+        </div>
+        <div class="card feature-card">
+          <div class="feature-check">✓</div>
+          <div><h4>Daily, Weekly & Monthly Reports</h4><p>Know exactly how your reviews are growing with regular performance reports</p></div>
+        </div>
+        <div class="card feature-card">
+          <div class="feature-check">✓</div>
+          <div><h4>Before/After Comparison</h4><p>Clear results showing your review growth from day one to day thirty</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- WHY THIS WORKS -->
+  <section class="section section-dark">
+    <div class="container text-center">
+      <span class="badge badge-green">WHY THIS WORKS</span>
+      <h2 class="section-title">Built for How Your Customers Actually Behave</h2>
+      <p class="section-sub">Not email. Not SMS. WhatsApp — where your customers already are.</p>
+      <div class="why-grid">
+        <div class="why-card">
+          <div class="why-icon">📱</div>
+          <h3>98% Open Rate</h3>
+          <p>Customers actually see and respond to WhatsApp messages. Email? Only 20% open rate.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">🛡️</div>
+          <h3>Filter Negatives</h3>
+          <p>Unhappy customers go to a private feedback form — protecting your public Google rating.</p>
+        </div>
+        <div class="why-card">
+          <div class="why-icon">⏰</div>
+          <h3>Zero Staff Effort</h3>
+          <p>After the initial setup, everything runs automatically. Your team focuses on what they do best.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="section" id="pricing">
+    <div class="container text-center">
+      <span class="badge badge-accent">PRICING</span>
+      <h2 class="section-title">Simple, Risk-Free Pricing</h2>
+      <p class="section-sub">You only pay for performance. No long-term contracts. No hidden fees.</p>
+      <div class="pricing-box">
+        <div class="pricing-header">
+          <h3>30-Day Pilot</h3>
+          <p>Try the system risk-free with performance-based pricing</p>
+        </div>
+        <div class="pricing-body">
+          <div class="pricing-row">
+            <span class="pricing-label">Setup Fee <span style="color:#94A3B8;font-size:0.8rem">(Upfront)</span></span>
+            <span class="pricing-amount">&#8377;5,000</span>
+          </div>
+          <div class="pricing-row">
+            <span class="pricing-label">Performance Fee <span style="color:#94A3B8;font-size:0.8rem">(Pre-Live)</span></span>
+            <span class="pricing-amount green">&#8377;4,999</span>
+          </div>
+          <div class="pricing-row">
+            <span class="pricing-label">Monthly Retainer <span style="color:#94A3B8;font-size:0.8rem">(Post-Pilot)</span></span>
+            <span class="pricing-amount">&#8377;4,999/mo</span>
+          </div>
+          <div class="pricing-note">
+              Performance fee is <strong>refundable</strong> if we don't hit the target. <a onclick="showPage('refund')" style="cursor:pointer;color:var(--accent);">See policy</a>
+              <br><br>
+              <em style="font-size:0.8rem; display:block; margin-top:10px;">Note: Standard automation connection included (Linked Device). If you require the Official WhatsApp Business API (BSP) for Green Tick verification, third-party platform charges will apply (billed at actuals). Contact us for a quote.</em>
+          </div>
+          
+          <a href="https://wa.me/918919198110?text=Hi%20Joshi%2C%20I%27m%20interested%20in%20the%20pilot%20offer%20for%20my%20business." class="btn btn-wa" style="width:100%;justify-content:center;">
+            WhatsApp Us
+          </a>
+          <div style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; margin-top: 16px; color: #94A3B8;">
+            <span class="shield">🛡️</span> First reviews within 7 days — or we fix it free
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="section section-alt" id="faq">
+    <div class="container text-center">
+      <span class="badge badge-accent">FAQ</span>
+      <h2 class="section-title">Common Questions</h2>
+      <p class="section-sub">Everything business owners ask before getting started.</p>
+      <div class="faq-list">
+        
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+            Do my staff need to do anything extra?
+          </div>
+          <div class="faq-a">No. After a short 30–45 minute training on how to enter customer details, the system handles everything automatically — sending messages, collecting responses, and routing reviews.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+            What if a customer is unhappy?
+          </div>
+          <div class="faq-a">Unhappy customers are routed to a private feedback form instead of Google. Their complaints come directly to you, not the public. This protects your star rating while still giving you actionable feedback. (Google review link remains accessible on the form for full compliance).</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+            Will this feel spammy to customers?
+          </div>
+          <div class="faq-a">Not at all. Customers receive one polite WhatsApp message after their visit, and one gentle reminder if they don't respond. They can opt out anytime. Messages are personalized with their name and your business name.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+            What happens after the 30-day pilot?
+          </div>
+          <div class="faq-a">If you're happy with the results, the system continues at ₹4,999/month — all-inclusive. No lock-in contracts. You can cancel anytime and the service runs until the end of your current billing period.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+            Is my customer data safe?
+          </div>
+          <div class="faq-a">Yes. All data is stored securely on Google's infrastructure. Customer personal data is automatically anonymized after 30 days. We never share or sell your data to anyone. Customers can request deletion anytime.</div>
+        </div>
+
+        <div class="faq-item">
+          <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+            How quickly can I see results?
+          </div>
+          <div class="faq-a">Setup takes 7 days. First reviews start coming in within 48 hours of going live. Most businesses see a noticeable jump in their Google review count within the first two weeks.</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FINAL CTA -->
+  <section class="final-cta" style="padding: 120px 0; background: #060911; text-align: center; color: white;">
+    <div class="container">
+      <h2 style="color: white; margin-bottom: 20px;">Ready to Grow Your Google Reviews?</h2>
+      <p style="color:#94A3B8; margin-bottom:40px; font-size:1.15rem;">Join smart business owners who are turning every customer visit into a 5-star Google review.</p>
+      <div class="cta-buttons" style="display:flex; justify-content:center; gap:16px; flex-wrap: wrap;">
+        <a href="https://wa.me/918919198110?text=Hi%20Joshi%2C%20I%27d%20like%20to%20start%20the%20Google%20review%20system%20for%20my%20business." class="btn btn-wa">
+            Chat on WhatsApp
+        </a>
+        <a href="tel:+918919198110" class="btn btn-secondary">📞 Call Now</a>
+      </div>
+    </div>
+  </section>
+
+</div><!-- END HOME VIEW -->
+
+
+<!-- ============================ -->
+<!-- VIEW: PRIVACY POLICY -->
+<!-- ============================ -->
+<div id="view-privacy" class="page-view">
+  <section class="legal-page">
+    <div class="container">
+      <div class="text-center">
+        <span class="badge badge-accent">LEGAL</span>
+        <h2 class="section-title">Privacy Policy</h2>
+      </div>
+      <div class="legal-content">
+        <p>JN AI Automations ("we", "us", "our") operates the website jnai.in and provides automated WhatsApp-based Google review collection services for businesses. This Privacy Policy explains how we collect, use, store, and protect information.</p>
+
+        <h3>1. Information We Collect</h3>
+        <p><strong>From our clients (business owners):</strong> Business name, owner name, phone number, email address, Google Business Profile details, WhatsApp Business details, and payment information.</p>
+        <p><strong>From our clients' customers (end users):</strong> Name, phone number, service details, and feedback responses. This data is provided to us by our clients — we do not collect it directly from end users.</p>
+        <p><strong>Automatically:</strong> Website usage data including IP address, browser type, and pages visited (via standard analytics).</p>
+
+        <h3>2. How We Use Information</h3>
+        <p>We use the information collected to: set up and operate the automated WhatsApp review collection system for our clients; send WhatsApp messages to clients' customers for feedback collection; route positive feedback to Google Reviews and negative feedback to private forms; generate performance reports for our clients; process payments and manage subscriptions; and improve our services.</p>
+
+        <h3>3. Third-Party Services</h3>
+        <p>We use the following third-party services to operate our system:</p>
+        <p><strong>Whapi.cloud</strong> — WhatsApp Business API provider for sending and receiving messages. <strong>Google</strong> — Google Business Profile, Google Forms, Google Sheets, and Google Workspace for data storage and review routing. <strong>Razorpay</strong> — Payment gateway for processing payments securely. These services have their own privacy policies and we encourage you to review them.</p>
+
+        <h3>4. Data Retention & Deletion</h3>
+        <p>Customer personal data (names, phone numbers) is automatically anonymized after 30 days from the date of collection. Anonymized data (with no personally identifiable information) may be retained for analytics and reporting purposes. End users can request immediate deletion of their data at any time by replying "DELETE MY DATA" to any WhatsApp message from our system. Deletion requests are processed within 48 hours. Client business data is retained for the duration of the active subscription and deleted within 30 days of account closure.</p>
+
+        <h3>5. Data Security</h3>
+        <p>All data is stored on Google's secured infrastructure (Google Workspace). Data in transit is encrypted via HTTPS/TLS. Access to client data is restricted to authorized personnel only. We implement HMAC signature verification on all incoming webhook communications.</p>
+
+        <h3>6. Data Sharing</h3>
+        <p>We do not sell, rent, or share personal data with any third parties for marketing purposes. Data is shared only with the third-party service providers listed above, solely for the purpose of operating our service.</p>
+
+        <h3>7. Client Responsibilities & Compliance</h3>
+        <p>Our clients (business owners) are responsible for obtaining appropriate consent from their customers before sharing their data with us. Additionally, we enforce a strict policy regarding <strong>Anti-Gating Compliance</strong>: While our system encourages unhappy customers to resolve issues privately, we do not block or hide public review options, ensuring full alignment with Google’s policies and the DPDP Act 2023.</p>
+
+        <h3>8. Your Rights</h3>
+        <p>You have the right to: request access to your personal data; request correction of inaccurate data; request deletion of your data; and opt out of receiving messages at any time.</p>
+
+        <h3>9. Changes to This Policy</h3>
+        <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated date. Continued use of our services after changes constitutes acceptance of the updated policy.</p>
+
+        <h3>10. Contact Us</h3>
+        <p>For any privacy-related questions or data requests, contact us at: <strong>team@jnaiautomations.com</strong> or +91 8919198110.</p>
+
+        <div style="margin-top:40px; text-align:center;">
+           <button class="btn btn-secondary" onclick="showPage('home')" style="background:var(--navy); border:none;">&larr; Back to Home</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================ -->
+<!-- VIEW: TERMS & CONDITIONS -->
+<!-- ============================ -->
+<div id="view-terms" class="page-view">
+  <section class="legal-page">
+    <div class="container">
+      <div class="text-center">
+        <h2 class="section-title">Terms &amp; Conditions</h2>
+      </div>
+      <div class="legal-content">
+        <p>These Terms & Conditions ("Terms") govern your use of the services provided by JN AI Automations ("we", "us", "our"), operated by Nagularapu Joshi Kumar, a sole proprietorship based in Hyderabad, Telangana, India. By engaging our services, you ("client") agree to these Terms.</p>
+
+        <h3>1. Service Description</h3>
+        <p>We provide an automated WhatsApp-based Google review collection system for businesses (retail, healthcare, hospitality, service). The service includes: WhatsApp automation setup and configuration; Google Business Profile integration; custom message template creation; private feedback form setup for unhappy customers; team training session (30–45 minute); system monitoring, optimization, and performance reports during the subscription period.</p>
+
+        <h3>2. Client Obligations</h3>
+        <p>As a client, you agree to: provide accurate customer data (name, phone number) into the system daily; maintain an active WhatsApp Business account for the duration of the service; ensure your Google Business Profile is active and accessible; obtain appropriate consent from your customers before sharing their data; not use the system for spam, unsolicited messaging, or any unlawful purpose; and cooperate with the onboarding and training process.</p>
+
+        <h3>2.1 WhatsApp Connectivity & Sessions</h3>
+        <p>Our WhatsApp automation service relies on WhatsApp’s official ‘Linked Devices’ (WhatsApp Web) feature. In line with WhatsApp’s security behavior, linked sessions may automatically log out after periods of inactivity and generally require re‑authentication (QR rescanning) at least once every 14 days, and sooner in some cases (for example, app updates, device changes, or network/security checks by WhatsApp). As these logouts are controlled by WhatsApp and not by our system, you agree to periodically rescan the WhatsApp QR code when prompted to keep your automation running.</p>
+
+        <h3>3. Our Obligations</h3>
+        <p>We will: complete system setup within 7 business days of receiving all required information; monitor and optimize system performance during the active subscription; provide daily, weekly, and monthly performance reports; respond to support queries within 24 hours during business hours (Monday–Saturday, 10:00 AM – 7:00 PM IST).</p>
+
+        <h3>4. Payment Terms</h3>
+        <p><strong>Setup Fee:</strong> ₹5,000 (one-time, non-refundable), payable before setup begins. <strong>Performance Fee:</strong> ₹4,999, payable after system setup and before go-live. Subject to refund based on performance (see Refund Policy). <strong>Monthly Retainer:</strong> ₹4,999/month, billed via automated recurring payment (Razorpay subscription). All payments are processed through Razorpay.</p>
+
+        <h3>5. Review Targets & Proportionality</h3>
+        <p>The review target for your business is agreed upon during onboarding based on your monthly customer volume. The standard target is 50 new Google reviews in 30 days for businesses serving 20+ customers daily (approx. 600 monthly visits). For lower-volume businesses, the target is proportionally adjusted and documented in your service agreement (e.g., 300 monthly visits = 25 review target). "Reviews" are defined as new Google reviews visible on your Google Business Profile, measured as the difference between your review count on go-live day and the count on day 30.</p>
+
+        <h3>6. Intellectual Property</h3>
+        <p>The automation system, workflows, message templates, and all related technology remain the intellectual property of JN AI Automations. Clients receive a non-exclusive, non-transferable license to use the system during their active subscription period.</p>
+
+        <h3>7. Limitation of Liability</h3>
+        <p>Our total liability is limited to the fees paid by the client in the preceding 30 days. We are not responsible for: changes to Google's review policies or algorithms; changes to WhatsApp/Meta's policies; customer behaviour or review content; temporary service interruptions due to third-party API outages; or reviews filtered or removed by Google.</p>
+
+        <h3>8. Termination</h3>
+        <p>We may terminate or suspend service if the client: violates these Terms; uses the system for spam or unlawful purposes; fails to make payment within the due date; or provides false or misleading information. In cases of termination for cause, no refund is applicable.</p>
+
+        <h3>9. Governing Law</h3>
+        <p>These Terms are governed by the laws of India. Any disputes shall be subject to the exclusive jurisdiction of courts in Hyderabad, Telangana.</p>
+
+        <div style="margin-top:40px; text-align:center;">
+           <button class="btn btn-secondary" onclick="showPage('home')" style="background:var(--navy); border:none;">&larr; Back to Home</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============================ -->
+<!-- VIEW: REFUND POLICY -->
+<!-- ============================ -->
+<div id="view-refund" class="page-view">
+  <section class="legal-page">
+    <div class="container">
+      <div class="text-center">
+        <h2 class="section-title">Refund &amp; Cancellation Policy</h2>
+      </div>
+      <div class="legal-content">
+        <h3>1. Setup Fee — ₹5,000 (Non-Refundable)</h3>
+        <p>The setup fee is non-refundable once setup work begins. This fee covers: WhatsApp automation configuration, Google Business Profile integration, custom message template creation, private feedback form setup, and staff training. If we are unable to complete the setup due to a fault on our end, the setup fee will be fully refunded.</p>
+
+        <h3>2. Performance Fee — ₹4,999 (First Month, Tiered Refund)</h3>
+        <p>The performance fee is collected after system setup and before go-live. It is subject to a tiered refund based on results achieved in the first 30 days from go-live, provided the client enters a minimum average of 15 customer entries per day into the system.</p>
+        
+        <div style="overflow-x:auto;">
+          <table class="legal-table">
+            <thead>
+              <tr>
+                <th>Achievement vs Agreed Target</th>
+                <th>Amount Retained</th>
+                <th>Refund Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>100% or more of target achieved</td>
+                <td>₹4,999 (full fee)</td>
+                <td>₹0</td>
+              </tr>
+              <tr>
+                <td>80% – 99% of target achieved <br><span style="font-size:0.8rem; color:#64748B">(e.g., 40–49 reviews vs 50 target)</span></td>
+                <td>₹2,999</td>
+                <td>₹2,000</td>
+              </tr>
+              <tr>
+                <td>Below 80% of target <br><span style="font-size:0.8rem; color:#64748B">(e.g., < 40 reviews vs 50 target)</span></td>
+                <td>₹0</td>
+                <td>₹4,999 (full refund)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>Example:</strong> For the standard target of 50 reviews (for businesses with 20+ customers/day): 50 or more reviews = no refund; 40–49 reviews = ₹2,000 refund; below 40 reviews = full ₹4,999 refund.</p>
+        <p><strong>Important:</strong> The refund is applicable only if the client has entered a daily average of at least 15 customer entries into the system throughout the 30-day pilot period. If insufficient customer data is provided by the client, the performance target is proportionally adjusted.</p>
+
+        <h3>3. Monthly Retainer — ₹4,999/month (Non-Refundable for Current Period)</h3>
+        <p>The monthly retainer is billed via Razorpay automated recurring payment at the start of each billing cycle. <strong>Cancellation:</strong> You may cancel your subscription at any time through the Razorpay payment portal or by contacting us directly. Upon cancellation, the service will continue to operate until the end of your current paid billing period. After the billing period ends, the system will be automatically paused. <strong>No mid-cycle refunds:</strong> The current month's retainer is non-refundable regardless of when cancellation is initiated. <strong>Re-activation:</strong> If you wish to resume the service after cancellation, a new subscription can be started at the then-current monthly rate.</p>
+        
+        <p style="margin-top: 16px; background: #F8FAFC; padding: 12px; border-left: 4px solid var(--accent); font-size: 0.95rem;">
+            <strong>Performance Guarantee Applicability:</strong><br>
+            The tiered refund policy (Section 2) applies <strong>exclusively</strong> to the initial Performance Fee covering the 30-day pilot. It does <strong>not</strong> apply to monthly retainers. Once the pilot is successful and the service continues, the monthly retainer fee covers ongoing system hosting, maintenance, and monitoring. This retainer is non-refundable and is not subject to review-count targets.
+        </p>
+
+        <h3>4. Refund Processing</h3>
+        <p>All eligible refunds will be processed within 7 business days of the refund being approved. Refunds are issued to the original payment method used. For payments made via UPI or bank transfer, refunds will be credited to the same bank account.</p>
+
+        <h3>5. Exceptions</h3>
+        <p>No refund is applicable if the service is terminated due to: client's violation of our Terms & Conditions; use of the system for spam or unlawful purposes; non-cooperation during setup or onboarding; or providing false or misleading information.</p>
+
+        <div style="margin-top:40px; text-align:center;">
+           <button class="btn btn-secondary" onclick="showPage('home')" style="background:var(--navy); border:none;">&larr; Back to Home</button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- PROFESSIONAL FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col">
+        <div class="logo-text">
+          JN AI
+        </div>
+        <p style="color: #94A3B8; font-size: 0.9rem; margin-top: 20px;">
+          Helping businesses in Hyderabad grow with automated Google reviews and WhatsApp marketing.
+        </p>
+      </div>
+      <div class="footer-col">
+        <h4 style="color: white;">Quick Links</h4>
+        <div class="footer-links-col" style="display:flex; flex-direction:column;">
+          <a onclick="showPage('home')">Home</a>
+          <a onclick="showPage('home', 'how')">How It Works</a>
+          <a onclick="showPage('home', 'features')">Features</a>
+          <a onclick="showPage('home', 'pricing')">Pricing</a>
+          <a onclick="showPage('home', 'faq')">FAQ</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4 style="color: white;">Legal</h4>
+        <div class="footer-links-col" style="display:flex; flex-direction:column;">
+          <a onclick="showPage('privacy')">Privacy Policy</a>
+          <a onclick="showPage('terms')">Terms &amp; Conditions</a>
+          <a onclick="showPage('refund')">Refund Policy</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4 style="color: white;">Contact Us</h4>
+        <div class="footer-contact-item">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          <a href="tel:+918919198110" style="color: inherit; text-decoration: none;">+91 891 919 8110</a>
+        </div>
+        <div class="footer-contact-item">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+          <a href="mailto:team@jnaiautomations.com" style="color: inherit; text-decoration: none;">team@jnaiautomations.com</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      &copy; 2026 JN AI Automations. All rights reserved.
+    </div>
+  </div>
+</footer>
+
+<!-- FLOATING WHATSAPP -->
+<a href="https://wa.me/918919198110?text=Hi%2C%20I%27m%20interested%20in%20the%20Google%20review%20automation%20system." class="wa-float" aria-label="Chat on WhatsApp">
+  <svg viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+</a>
+
+<script>
+function showPage(pageId, sectionId = null) {
+  document.querySelectorAll('.page-view').forEach(el => el.classList.remove('active'));
+  const targetView = document.getElementById('view-' + pageId);
+  if (targetView) targetView.classList.add('active');
+  if (sectionId) {
+    setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if(element) element.scrollIntoView({behavior: 'smooth'});
+    }, 100);
+  } else {
+    window.scrollTo(0, 0);
+  }
+  document.getElementById('navLinks').classList.remove('open');
+}
+
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 20);
+});
+
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) entry.target.classList.add('visible');
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
