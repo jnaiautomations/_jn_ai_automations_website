@@ -1,0 +1,11 @@
+# robots.txt for www.jnaiautomations.com
+# This file tells search engine crawlers (Google, Bing, etc.) what they can access.
+
+# Allow ALL crawlers to access ALL pages on the site.
+# The * means "every crawler" and the / means "every page".
+User-agent: *
+Allow: /
+
+# Tell crawlers where to find the sitemap.
+# This helps Google discover all your pages faster.
+Sitemap: https://www.jnaiautomations.com/sitemap.xml

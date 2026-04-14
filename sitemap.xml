@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SITEMAP for www.jnaiautomations.com
+  
+  WHAT THIS FILE DOES:
+  It tells search engines (Google, Bing) exactly which pages exist on your site.
+  Without this, search engines have to guess — and they often miss pages.
+  
+  HOW TO UPDATE:
+  Every time you add a new page (like a blog post), add a new <url> block below.
+  Copy the format of the existing entry and change the <loc> and <lastmod>.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+  <!-- HOMEPAGE — Your main landing page with all content -->
+  <url>
+    <loc>https://www.jnaiautomations.com/</loc>
+    <lastmod>2026-04-14</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!--
+    FUTURE PAGES — When you add blog posts or separate pages, add them here.
+    Example format:
+    
+    <url>
+      <loc>https://www.jnaiautomations.com/blog/google-reviews-salon-india.html</loc>
+      <lastmod>2026-04-20</lastmod>
+      <changefreq>monthly</changefreq>
+      <priority>0.8</priority>
+    </url>
+  -->
+
+</urlset>
